@@ -650,7 +650,34 @@ def configuracion():
     return render_template('configuracion.html', template_actual=template_actual)
 
 
+@app.route('/consulta')
+def consulta_cliente():
+    """ Muestra el formulario para que el cliente ingrese su cédula. """
+    return render_template('consulta_cliente.html')
 
+@app.route('/estado', methods=['POST'])
+def ver_estado_prestamo():
+    """ Busca el préstamo del cliente y muestra su estado. """
+    cedula = request.form.get('cedula')
+    if not cedula:
+        flash('Debes ingresar un número de cédula.', 'warning')
+        return redirect(url_for('consulta_cliente'))
+
+    cliente = Cliente.query.filter_by(cedula=cedula).first()
+    
+    # Buscamos un préstamo activo para este cliente
+    prestamo_activo = None
+    if cliente:
+        prestamo_activo = Prestamo.query.filter_by(cliente_id=cliente.id, estado='activo').first()
+
+    if not prestamo_activo:
+        flash('No se encontró un crédito activo para la cédula ingresada.', 'danger')
+        return redirect(url_for('consulta_cliente'))
+
+    today = date.today()
+    return render_template('estado_prestamo.html', prestamo=prestamo_activo, today=today)
+
+    
 # --- EJECUCIÓN DE LA APLICACIÓN ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5500, debug=True)
