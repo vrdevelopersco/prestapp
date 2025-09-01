@@ -307,8 +307,10 @@ def buscar_o_crear_cliente():
         # Si el cliente existe, vamos directo a crear el préstamo para él
         return redirect(url_for('prestamo_para_cliente', cliente_id=cliente.id))
     else:
-        # Si no existe, lo mandamos a la página de creación de cliente
-        return redirect(url_for('crear_cliente', cedula_previa=cedula))
+        # SI NO EXISTE: Mostramos un error y lo mandamos a la lista de clientes.
+        flash(f"El cliente con cédula {cedula} no existe. Por favor, créalo primero desde esta sección.", 'warning')
+        return redirect(url_for('gestion_clientes'))
+
 
 
 @app.route('/prestamo/<int:prestamo_id>')
@@ -450,18 +452,29 @@ def gestion_clientes():
 @app.route('/admin/cliente/crear', methods=['GET', 'POST'])
 @login_required
 def crear_cliente():
-    cedula_previa = request.args.get('cedula_previa', '') # Recibe la cédula si viene de la búsqueda
+    if current_user.rol != 'admin':
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
-        # ... (lógica de creación de cliente que ya tienes) ...
-        nuevo_cliente = Cliente(...)
-        db.session.add(nuevo_cliente)
-        db.session.commit()
-        flash('Cliente creado exitosamente. Ahora puedes crear su préstamo.', 'success')
-        # Redirige a crear préstamo para el cliente recién creado
-        return redirect(url_for('prestamo_para_cliente', cliente_id=nuevo_cliente.id))
+        cedula = request.form['cedula']
+        cliente_existente = Cliente.query.filter_by(cedula=cedula).first()
+        if cliente_existente:
+            flash('Ya existe un cliente con esa cédula.', 'danger')
+        else:
+            nuevo_cliente = Cliente(
+                cedula=cedula,
+                nombre_completo=request.form['nombre_completo'],
+                telefono=request.form['telefono'],
+                direccion=request.form['direccion']
+            )
+            db.session.add(nuevo_cliente)
+            db.session.commit()
+            flash('Cliente creado exitosamente.', 'success')
+            # Siempre regresa a la lista de clientes
+            return redirect(url_for('gestion_clientes'))
 
-    return render_template('crear_cliente.html', cedula_previa=cedula_previa)
+    # Ya no necesita la variable 'cedula_previa'
+    return render_template('crear_cliente.html')
 
 
 # En app.py
@@ -677,7 +690,7 @@ def ver_estado_prestamo():
     today = date.today()
     return render_template('estado_prestamo.html', prestamo=prestamo_activo, today=today)
 
-    
+
 # --- EJECUCIÓN DE LA APLICACIÓN ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5500, debug=True)
