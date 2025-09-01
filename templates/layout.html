@@ -38,10 +38,11 @@
             <i class="bi bi-people-fill me-2"></i>Gestión de Clientes
         </a>
     </li>
-    <li>
-        <a href="#" class="nav-link text-white"> <i class="bi bi-person-gear me-2"></i>Gestión de Usuarios
-        </a>
-    </li>
+            <li>
+                <a href="{{ url_for('gestion_usuarios') }}" class="nav-link text-white {% if request.endpoint == 'gestion_usuarios' %}active{% endif %}">
+                <i class="bi bi-person-gear me-2"></i>Gestión de Usuarios
+            </a>
+            </li>
     <li>
         <a href="{{ url_for('simulador') }}" class="nav-link text-white {% if request.endpoint == 'simulador' %}active{% endif %}">
             <i class="bi bi-calculator me-2"></i>Simulador de Crédito
