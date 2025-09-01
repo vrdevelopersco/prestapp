@@ -1,5 +1,6 @@
 import os
 import logging
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
@@ -8,19 +9,27 @@ from datetime import datetime, date, timedelta
 from sqlalchemy import func, or_
 from flask_migrate import Migrate
 
+load_dotenv()
+
 # --- CONFIGURACIÓN INICIAL ---
 app = Flask(__name__)
 
 # --- Clave Secreta Fija (para que no te desloguee) ---
 # Recuerda generar la tuya con: python -c 'import secrets; print(secrets.token_hex(16))'
-app.config['SECRET_KEY'] = 'f8d9a6c7b0e1f2a3b4c5d6e7f8a9b0c1'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'una_clave_por_defecto_para_desarrollo')
 
 # --- Conexión a la Base de Datos de Hostinger ---
-DB_USER = "u718598814_panconqueso"
-DB_PASS = "Miloyfrutas!1"
-DB_HOST = "srv1264.hstgr.io"
-DB_NAME = "u718598814_creditossas1"
+DB_USER = os.environ.get('DB_USER')
+DB_PASS = os.environ.get('DB_PASS')
+DB_HOST = os.environ.get('DB_HOST')
+DB_NAME = os.environ.get('DB_NAME')
+
+# Construimos la cadena de conexión solo si todas las variables existen
+if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
+    raise ValueError("Faltan variables de entorno para la base de datos. Asegúrate de configurar el archivo .env")
+
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
+
 
 # --- INICIALIZACIÓN DE COMPONENTES ---
 db = SQLAlchemy(app)
@@ -641,7 +650,7 @@ def configuracion():
     return render_template('configuracion.html', template_actual=template_actual)
 
 
-    
+
 # --- EJECUCIÓN DE LA APLICACIÓN ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5500, debug=True)
