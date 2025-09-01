@@ -93,7 +93,6 @@ class Configuracion(db.Model):
     clave = db.Column(db.String(50), unique=True, nullable=False)
     valor = db.Column(db.Text, nullable=True)
 
-# --- RUTAS DE AUTENTICACIÓN ---
 
 @app.route('/')
 def index():
@@ -643,25 +642,31 @@ def eliminar_usuario(usuario_id):
 @login_required
 def configuracion():
     if current_user.rol != 'admin':
+        flash('Acceso no autorizado.', 'danger')
         return redirect(url_for('index'))
-
-    # Usamos .first() porque sabemos que solo habrá una plantilla
+    
+    # Buscamos la plantilla en la base de datos
     template_obj = Configuracion.query.filter_by(clave='whatsapp_template').first()
 
     if request.method == 'POST':
+        # Si el admin guarda el formulario
         nuevo_template = request.form.get('whatsapp_template')
         if template_obj:
+            # Si ya existía, la actualizamos
             template_obj.valor = nuevo_template
         else:
+            # Si no existía, la creamos
             template_obj = Configuracion(clave='whatsapp_template', valor=nuevo_template)
             db.session.add(template_obj)
         db.session.commit()
-        flash('Plantilla de WhatsApp guardada.', 'success')
+        flash('Plantilla de WhatsApp guardada correctamente.', 'success')
         return redirect(url_for('configuracion'))
 
-    template_actual = template_obj.valor if template_obj else "Hola [cliente], te recordamos que tu cuota de $[monto_cuota] venció el [fecha_vencimiento]."
+    # Si se carga la página, mostramos la plantilla actual o una por defecto
+    template_actual = template_obj.valor if template_obj else "Hola [cliente], te recordamos que tu cuota de $[monto_cuota] que vencía el [fecha_vencimiento] se encuentra pendiente. ¡Gracias!"
     return render_template('configuracion.html', template_actual=template_actual)
 
+    
 
 @app.route('/consulta')
 def consulta_cliente():
