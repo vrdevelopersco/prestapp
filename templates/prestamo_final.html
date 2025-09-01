@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+
+{% block title %}Nuevo Préstamo para {{ cliente.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="card mx-auto" style="max-width: 700px;">
+    <div class="card-header bg-primary text-white">
+        <h4><i class="bi bi-journal-plus"></i> Nuevo Préstamo</h4>
+    </div>
+    <div class="card-body p-4">
+        <form id="loan-form" method="POST" action="{{ url_for('prestamo_para_cliente', cliente_id=cliente.id) }}">
+            
+            <h5 class="mb-3">1. Cliente Seleccionado</h5>
+            <div class="row">
+                <div class="col-md-6 mb-3"><label class="form-label">Cédula</label><input type="text" class="form-control" value="{{ cliente.cedula }}" readonly disabled></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Nombre Completo</label><input type="text" class="form-control" value="{{ cliente.nombre_completo }}" readonly disabled></div>
+            </div>
+            <div class="row">
+                 <div class="col-md-6 mb-3"><label class="form-label">Teléfono</label><input type="text" class="form-control" value="{{ cliente.telefono or '' }}" readonly disabled></div>
+                <div class="col-md-6 mb-3"><label class="form-label">Dirección</label><input type="text" class="form-control" value="{{ cliente.direccion or '' }}" readonly disabled></div>
+            </div>
+
+            {% if current_user.rol == 'admin' and cobradores %}
+            <hr class="my-4">
+            <h5 class="mb-3">Asignar a Cobrador</h5>
+            <div class="mb-3">
+                <label for="cobrador_id" class="form-label">Cobrador Responsable</label>
+                <select class="form-select" id="cobrador_id" name="cobrador_id">
+                    {% for cobrador in cobradores %}<option value="{{ cobrador.id }}">{{ cobrador.username }}</option>{% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% include '_simulador_componente.html' %}
+            
+            <div class="d-grid mt-4"><button type="submit" class="btn btn-success btn-lg">Guardar y Crear Préstamo</button></div>
+        </form>
+    </div>
+</div>
+{% endblock %}

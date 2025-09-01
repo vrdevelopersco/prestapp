@@ -1,0 +1,82 @@
+<hr class="my-4">
+<h5 class="mb-3">2. Condiciones del Préstamo</h5>
+<div class="row">
+    <div class="col-md-4 mb-3"><label for="monto">Monto ($)</label><input type="number" class="form-control" id="monto" name="monto" value="500000" required></div>
+    <div class="col-md-4 mb-3"><label for="plazo">Plazo (Meses)</label><input type="number" class="form-control" id="plazo" name="plazo" value="2" required></div>
+    <div class="col-md-4 mb-3"><label for="interes">Interés Mensual (%)</label><input type="number" class="form-control" id="interes" name="interes" value="20" required></div>
+</div>
+<div class="mb-3">
+    <label for="frecuencia" class="form-label fw-bold">Frecuencia de Pago</label>
+    <select class="form-select" id="frecuencia" name="frecuencia">
+        <option value="diaria" selected>Diaria</option>
+        <option value="semanal">Semanal</option>
+        <option value="quincenal">Quincenal</option>
+        <option value="mensual">Mensual</option>
+    </select>
+</div>
+<div id="opciones-diarias" class="ms-3">
+    <p class="fw-bold mb-1">Reglas de Cobro Diario:</p>
+    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="cobrarSabado" name="cobrarSabado" checked><label class="form-check-label" for="cobrarSabado">Cobrar días Sábado</label></div>
+    <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="cobrarDomingo" name="cobrarDomingo"><label class="form-check-label" for="cobrarDomingo">Cobrar días Domingo</label></div>
+</div>
+<div class="alert alert-info mt-3">
+    <h5 class="text-center">Resumen de Pagos</h5>
+    <ul class="list-group list-group-flush" id="resultados-calculadora"></ul>
+    <p class="text-center fw-bold mt-2">Total a Pagar: <span id="total-a-pagar">$0</span></p>
+</div>
+
+<script>
+    // Se usa un bloque de auto-ejecución para aislar las variables y no chocar con otros scripts
+    (() => {
+        const form = document.getElementById('loan-form');
+        const resultadosEl = document.getElementById('resultados-calculadora');
+        const totalAPagarEl = document.getElementById('total-a-pagar');
+        const frecuenciaSelect = document.getElementById('frecuencia');
+        const opcionesDiariasDiv = document.getElementById('opciones-diarias');
+
+        function calcularCuotas() {
+            // ... (la lógica de cálculo que ya funciona)
+            const monto = parseFloat(document.getElementById('monto').value) || 0;
+            const plazo = parseFloat(document.getElementById('plazo').value) || 0;
+            const interesMensual = parseFloat(document.getElementById('interes').value) || 0;
+            const cobraSabado = document.getElementById('cobrarSabado').checked;
+            const cobraDomingo = document.getElementById('cobrarDomingo').checked;
+
+            if (monto === 0 || plazo === 0) return;
+            const interesTotal = monto * (interesMensual / 100) * plazo;
+            const montoTotalAPagar = monto + interesTotal;
+            const formatoMoneda = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
+            totalAPagarEl.textContent = formatoMoneda.format(montoTotalAPagar);
+            const promedioSemanasPorMes = 4.345;
+            const cuotaMensual = montoTotalAPagar / plazo;
+            const cuotaQuincenal = cuotaMensual / 2;
+            const cuotaSemanal = montoTotalAPagar / (plazo * promedioSemanasPorMes);
+            let diasDePagoPorSemana = 5;
+            if (cobraSabado) diasDePagoPorSemana++;
+            if (cobraDomingo) diasDePagoPorSemana++;
+            const cuotaDiaria = cuotaSemanal / diasDePagoPorSemana;
+            resultadosEl.innerHTML = `
+                <li class="list-group-item d-flex justify-content-between align-items-center">Cuota Diaria <small class="text-muted">(${diasDePagoPorSemana} días/sem)</small> <strong>${formatoMoneda.format(cuotaDiaria)}</strong></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Cuota Semanal <strong>${formatoMoneda.format(cuotaSemanal)}</strong></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Cuota Quincenal <strong>${formatoMoneda.format(cuotaQuincenal)}</strong></li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">Cuota Mensual <strong>${formatoMoneda.format(cuotaMensual)}</strong></li>
+            `;
+        }
+
+        function toggleOpcionesDiarias() {
+            if(frecuenciaSelect) {
+                opcionesDiariasDiv.style.display = frecuenciaSelect.value === 'diaria' ? 'block' : 'none';
+            }
+        }
+        
+        if(form) {
+            form.addEventListener('input', calcularCuotas);
+            frecuenciaSelect.addEventListener('change', toggleOpcionesDiarias);
+            
+            document.addEventListener('DOMContentLoaded', () => {
+                calcularCuotas();
+                toggleOpcionesDiarias();
+            }, { once: true });
+        }
+    })();
+</script>

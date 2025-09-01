@@ -1,0 +1,90 @@
+{% extends 'layout.html' %}
+
+{% block title %}Detalle del Préstamo #{{ prestamo.id }}{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <a href="{{ url_for('admin_dashboard') }}">&laquo; Volver al Dashboard</a>
+    
+    <div class="d-flex justify-content-between align-items-center mt-2">
+    <div>
+        <h2 class="mb-0">Detalle del Préstamo</h2>
+        </div>
+    {% if current_user.rol == 'admin' %}
+    <div class="btn-group">
+        <a href="{{ url_for('editar_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-warning">
+            <i class="bi bi-pencil-square"></i> Editar
+        </a>
+        <form method="POST" action="{{ url_for('eliminar_prestamo', prestamo_id=prestamo.id) }}" class="d-inline" onsubmit="return confirm('¿Estás SEGURO de que deseas eliminar este préstamo y TODAS sus cuotas? Esta acción no se puede deshacer.');">
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash-fill"></i> Eliminar
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+    <p class="lead">Cédula: {{ prestamo.cliente.cedula }}</p>
+
+    <div class="card mt-4">
+        <div class="card-header fw-bold">Cuotas del Préstamo</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Fecha de Vencimiento</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+<tbody>
+    {% for cuota in prestamo.cuotas %}
+    <tr class="
+        {% if cuota.estado == 'pagada' %}table-success
+        {% elif cuota.estado == 'atrasada' %}table-danger
+        {% elif cuota.fecha_vencimiento == today %}table-warning
+        {% endif %}
+    ">
+        <td>{{ loop.index }}</td>
+        <td>{{ cuota.fecha_vencimiento.strftime('%d de %B, %Y') }}</td>
+        <td>${{ cuota.monto_cuota|int }}</td>
+        <td><span class="badge 
+            {% if cuota.estado == 'pagada' %}bg-success
+            {% elif cuota.estado == 'atrasada' %}bg-danger
+            {% else %}bg-secondary
+            {% endif %}
+        ">{{ cuota.estado|capitalize }}</span>
+        </td>
+        <td>
+            {% if cuota.estado in ['pendiente', 'atrasada'] %}
+                <form method="POST" action="{{ url_for('pagar_cuota', cuota_id=cuota.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-success">
+                        <i class="bi bi-check-lg"></i> Pagar
+                    </button>
+                </form>
+            {% elif cuota.estado == 'pagada' and current_user.rol == 'admin' %}
+                <form method="POST" action="{{ url_for('revertir_pago_cuota', cuota_id=cuota.id) }}" class="d-inline">
+                    <button type="submit" class="btn btn-sm btn-warning">
+                        <i class="bi bi-arrow-counterclockwise"></i> Revertir
+                    </button>
+                </form>
+            {% else %}
+                -
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+
+{% endblock %}

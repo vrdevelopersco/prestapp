@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block title %}Editar Usuario{% endblock %}
+{% block content %}
+<h2 class="mb-4">Editando a {{ usuario.username }}</h2>
+<div class="card">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="username" class="form-label">Nombre de Usuario</label>
+                <input type="text" class="form-control" id="username" name="username" value="{{ usuario.username }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Nueva Contraseña (opcional)</label>
+                <input type="password" class="form-control" id="password" name="password" placeholder="Dejar en blanco para no cambiar">
+            </div>
+            <div class="mb-3">
+                <label for="rol" class="form-label">Rol</label>
+                <select class="form-select" id="rol" name="rol">
+                    <option value="cobrador" {% if usuario.rol == 'cobrador' %}selected{% endif %}>Cobrador</option>
+                    <option value="admin" {% if usuario.rol == 'admin' %}selected{% endif %}>Administrador</option>
+                </select>
+            </div>
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('gestion_usuarios') }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

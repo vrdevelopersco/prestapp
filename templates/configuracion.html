@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block title %}Configuración de Notificaciones{% endblock %}
+{% block content %}
+<h2 class="mb-4">Configuración de Notificaciones</h2>
+<div class="card">
+    <div class="card-header">Plantilla de Mensaje de WhatsApp</div>
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label for="whatsapp_template" class="form-label">Mensaje para cuotas atrasadas:</label>
+                <textarea class="form-control" id="whatsapp_template" name="whatsapp_template" rows="5">{{ template_actual }}</textarea>
+                <div class="form-text">
+                    Usa estas variables para personalizar el mensaje:
+                    <code>[cliente]</code>, <code>[monto_cuota]</code>, <code>[fecha_vencimiento]</code>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Plantilla</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+{% block title %}Iniciar Solicitud de Préstamo{% endblock %}
+{% block content %}
+<div class="card mx-auto" style="max-width: 500px;">
+    <div class="card-header bg-primary text-white">
+        <h4><i class="bi bi-search me-2"></i>Verificar Cliente</h4>
+    </div>
+    <div class="card-body">
+        <p>Ingresa la cédula del cliente para continuar con la solicitud de préstamo.</p>
+        <form method="POST" action="{{ url_for('buscar_o_crear_cliente') }}">
+            <div class="mb-3">
+                <label for="cedula" class="form-label">Cédula del Cliente</label>
+                <input type="text" class="form-control" id="cedula" name="cedula" required autofocus>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Buscar / Continuar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

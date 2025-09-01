@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+{% block title %}Simulador de Crédito{% endblock %}
+{% block content %}
+<div class="card mx-auto" style="max-width: 700px;">
+    <div class="card-header bg-primary text-white">
+        <h4><i class="bi bi-calculator"></i> Simulador de Crédito</h4>
+    </div>
+    <div class="card-body p-4" id="loan-form">
+         {% include '_simulador_componente.html' %}
+    </div>
+</div>
+{% endblock %}

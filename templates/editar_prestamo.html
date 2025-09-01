@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block title %}Detalle del Préstamo #{{ prestamo.id }}{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="card">
+        <div class="card-header">
+            <h4>Editar Préstamo #{{ prestamo.id }}</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('editar_prestamo', prestamo_id=prestamo.id) }}">
+                <div class="mb-3">
+                    <label class="form-label">Cliente</label>
+                    <input type="text" class="form-control" value="{{ prestamo.cliente.nombre_completo }}" readonly disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Monto del Préstamo</label>
+                    <input type="text" class="form-control" value="${{ prestamo.monto_prestado|int }}" readonly disabled>
+                </div>
+                <div class="mb-4">
+                    <label for="cobrador_id" class="form-label fw-bold">Asignar a un nuevo Cobrador</label>
+                    <select class="form-select" id="cobrador_id" name="cobrador_id">
+                        {% for cobrador in cobradores %}
+                            <option value="{{ cobrador.id }}" {% if prestamo.usuario_id == cobrador.id %}selected{% endif %}>
+                                {{ cobrador.username }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('detalle_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-secondary">Cancelar</a>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
