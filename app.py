@@ -487,7 +487,7 @@ def prestamo_para_cliente(cliente_id):
         cobradores = Usuario.query.filter(or_(Usuario.rol == 'admin', Usuario.rol == 'cobrador')).all()
 
     if request.method == 'POST':
-        # --- Recopilación de datos del formulario ---
+        # --- Recopilación de datos del formulario (sin cambios) ---
         monto = float(request.form.get('monto'))
         plazo = int(request.form.get('plazo'))
         interes = float(request.form.get('interes'))
@@ -498,8 +498,6 @@ def prestamo_para_cliente(cliente_id):
         
         total_a_pagar = monto * (1 + (interes / 100) * plazo)
 
-        # --- LÍNEA CORREGIDA ---
-        # Ahora todos los argumentos están nombrados correctamente
         nuevo_prestamo = Prestamo(
             monto_prestado=monto,
             tasa_interes_mensual=interes,
@@ -512,8 +510,41 @@ def prestamo_para_cliente(cliente_id):
             usuario_id=cobrador_id
         )
         
-        # --- (Aquí va la lógica de generación de cuotas que ya funciona) ---
-        # ...
+        # --- LÓGICA DE GENERACIÓN DE CUOTAS (CORREGIDA Y COMPLETA) ---
+        numero_cuotas = 0
+        if frecuencia == 'diaria':
+            dias_pago_aprox = 0
+            for i in range(plazo * 30):
+                dia_semana = (date.today() + timedelta(days=i+1)).weekday()
+                if (dia_semana == 6 and not cobrar_domingo) or (dia_semana == 5 and not cobrar_sabado):
+                    continue
+                dias_pago_aprox += 1
+            numero_cuotas = dias_pago_aprox
+        elif frecuencia == 'semanal': numero_cuotas = plazo * 4
+        elif frecuencia == 'quincenal': numero_cuotas = plazo * 2
+        elif frecuencia == 'mensual': numero_cuotas = plazo
+
+        if numero_cuotas > 0:
+            valor_cuota = round(total_a_pagar / numero_cuotas, 2)
+            fecha_actual = date.today() + timedelta(days=1)
+
+            for _ in range(int(numero_cuotas)):
+                if frecuencia == 'diaria':
+                    while True:
+                        dia_semana = fecha_actual.weekday()
+                        if (dia_semana == 6 and not cobrar_domingo) or (dia_semana == 5 and not cobrar_sabado):
+                            fecha_actual += timedelta(days=1)
+                        else:
+                            break
+                
+                cuota_vencimiento = fecha_actual
+                cuota = Cuota(monto_cuota=valor_cuota, fecha_vencimiento=cuota_vencimiento, prestamo=nuevo_prestamo)
+                db.session.add(cuota)
+
+                if frecuencia == 'diaria': fecha_actual += timedelta(days=1)
+                elif frecuencia == 'semanal': fecha_actual += timedelta(weeks=1)
+                elif frecuencia == 'quincenal': fecha_actual += timedelta(days=15)
+                elif frecuencia == 'mensual': fecha_actual += timedelta(days=30)
         
         try:
             db.session.add(nuevo_prestamo)
@@ -523,8 +554,8 @@ def prestamo_para_cliente(cliente_id):
         except Exception as e:
             db.session.rollback()
             flash(f'Error al crear el préstamo: {e}', 'danger')
+            app.logger.error(f"Error en creación de préstamo: {e}")
 
-    # Para el método GET
     return render_template('prestamo_final.html', cliente=cliente, cobradores=cobradores)
 
 
@@ -666,7 +697,7 @@ def configuracion():
     template_actual = template_obj.valor if template_obj else "Hola [cliente], te recordamos que tu cuota de $[monto_cuota] que vencía el [fecha_vencimiento] se encuentra pendiente. ¡Gracias!"
     return render_template('configuracion.html', template_actual=template_actual)
 
-    
+
 
 @app.route('/consulta')
 def consulta_cliente():
