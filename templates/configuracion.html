@@ -16,6 +16,14 @@
             </div>
             <button type="submit" class="btn btn-primary">Guardar Plantilla</button>
         </form>
+
+        <form method="POST" enctype="multipart/form-data"> <hr class="my-4">
+    <div class="mb-3">
+        <label for="logo" class="form-label">Logo de la Aplicación (reemplazará el icono)</label>
+        <input class="form-control" type="file" id="logo" name="logo">
+    </div>
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+</form>
     </div>
 </div>
 {% endblock %}

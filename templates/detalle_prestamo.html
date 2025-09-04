@@ -61,11 +61,12 @@
         </td>
         <td>
             {% if cuota.estado in ['pendiente', 'atrasada'] %}
-                <form method="POST" action="{{ url_for('pagar_cuota', cuota_id=cuota.id) }}" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-success">
-                        <i class="bi bi-check-lg"></i> Pagar
-                    </button>
-                </form>
+                <form method="POST" action="{{ url_for('pagar_cuota', cuota_id=cuota.id) }}">
+    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#notaModal{{ cuota.id }}">
+        Nota
+    </button>
+    <button type="submit" class="btn btn-sm btn-success">Pagar</button>
+</form>
             {% elif cuota.estado == 'pagada' and current_user.rol == 'admin' %}
                 <form method="POST" action="{{ url_for('revertir_pago_cuota', cuota_id=cuota.id) }}" class="d-inline">
                     <button type="submit" class="btn btn-sm btn-warning">

@@ -1,5 +1,6 @@
 import os
 import logging
+import math
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -8,6 +9,8 @@ from flask_bcrypt import Bcrypt
 from datetime import datetime, date, timedelta
 from sqlalchemy import func, or_
 from flask_migrate import Migrate
+from werkzeug.utils import secure_filename
+
 
 load_dotenv()
 
@@ -17,6 +20,13 @@ app = Flask(__name__)
 # --- Clave Secreta Fija (para que no te desloguee) ---
 # Recuerda generar la tuya con: python -c 'import secrets; print(secrets.token_hex(16))'
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'una_clave_por_defecto_para_desarrollo')
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'svg'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 
 # --- Conexión a la Base de Datos de Hostinger ---
 DB_USER = os.environ.get('DB_USER')
@@ -92,6 +102,13 @@ class Configuracion(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     clave = db.Column(db.String(50), unique=True, nullable=False)
     valor = db.Column(db.Text, nullable=True)
+
+
+@app.context_processor
+def inject_logo():
+    logo_config = Configuracion.query.filter_by(clave='logo_filename').first()
+    logo_url = url_for('static', filename=f'uploads/{logo_config.valor}') if logo_config else None
+    return dict(logo_url=logo_url)
 
 
 @app.route('/')
@@ -184,18 +201,64 @@ def admin_dashboard():
         "cartera_pendiente": f"{cartera_pendiente:,.0f}",
         "clientes_activos": len(prestamos_activos)
     }
-    
-    return render_template('admin.html', metricas=metricas, prestamos=prestamos_activos)
+
+    # --- NUEVA LÓGICA: MÉTRICAS POR COBRADOR ---
+    stats_cobradores = []
+    cobradores = Usuario.query.filter(or_(Usuario.rol == 'cobrador', Usuario.rol == 'admin')).all()
+
+    for cobrador in cobradores:
+        prestamos_cobrador = Prestamo.query.filter_by(usuario_id=cobrador.id).all()
+        if not prestamos_cobrador:
+            continue # Si no tiene préstamos, lo saltamos
+
+        total_prestado_cobrador = sum(p.monto_prestado for p in prestamos_cobrador)
+        total_recaudado_cobrador = db.session.query(func.sum(Cuota.monto_cuota))\
+            .join(Prestamo).filter(Prestamo.usuario_id == cobrador.id, Cuota.estado.in_(['pagada', 'pagada_tarde'])).scalar() or 0
+
+        stats = {
+            'username': cobrador.username,
+            'prestado': f"{total_prestado_cobrador:,.0f}",
+            'recaudado': f"{total_recaudado_cobrador:,.0f}",
+            'clientes_activos': db.session.query(func.count(Cliente.id.distinct()))\
+                .join(Prestamo).filter(Prestamo.usuario_id == cobrador.id, Prestamo.estado == 'activo').scalar() or 0
+        }
+        stats_cobradores.append(stats)
+
+    return render_template('admin.html', metricas=metricas, prestamos=prestamos_activos, stats_cobradores=stats_cobradores)
     
 
 # dashboard inicial del cobrador o llamar al admin
+# En app.py
 @app.route('/dashboard')
 @login_required
 def cobrador_dashboard():
     if current_user.rol != 'cobrador':
         return redirect(url_for('admin_dashboard'))
-    prestamos_asignados = Prestamo.query.filter_by(usuario_id=current_user.id, estado='activo').all()
-    return render_template('cobrador.html', prestamos=prestamos_asignados)
+
+    # Buscamos los préstamos del cobrador actual
+    prestamos_asignados = Prestamo.query.filter_by(usuario_id=current_user.id).all()
+
+    # Calculamos sus métricas
+    total_prestado = sum(p.monto_prestado for p in prestamos_asignados)
+    total_recaudado = db.session.query(func.sum(Cuota.monto_cuota))\
+        .join(Prestamo).filter(Prestamo.usuario_id == current_user.id, Cuota.estado.in_(['pagada', 'pagada_tarde'])).scalar() or 0
+
+    cartera_pendiente = total_prestado - total_recaudado
+
+    # Contamos clientes únicos para este cobrador
+    clientes_activos = db.session.query(func.count(Cliente.id.distinct()))\
+        .join(Prestamo).filter(Prestamo.usuario_id == current_user.id, Prestamo.estado == 'activo').scalar() or 0
+
+    metricas = {
+        "total_prestado": f"{total_prestado:,.0f}",
+        "total_recaudado": f"{total_recaudado:,.0f}",
+        "cartera_pendiente": f"{cartera_pendiente:,.0f}",
+        "clientes_activos": clientes_activos
+    }
+
+    prestamos_activos = [p for p in prestamos_asignados if p.estado == 'activo']
+
+    return render_template('cobrador.html', prestamos=prestamos_activos, metricas=metricas)
 
 
 # busqueda de cliente por cédula (API)
@@ -374,8 +437,6 @@ def eliminar_prestamo(prestamo_id):
 @app.route('/cuota/<int:cuota_id>/pagar', methods=['POST'])
 @login_required
 def pagar_cuota(cuota_id):
-    """ Procesa el pago de una cuota específica. """
-    # --- LA CORRECCIÓN ESTÁ EN LA LÍNEA SIGUIENTE ---
     cuota = Cuota.query.get_or_404(cuota_id)
     
     if cuota.estado == 'pagada':
@@ -394,6 +455,18 @@ def pagar_cuota(cuota_id):
         app.logger.error(f"Error al pagar cuota {cuota_id}: {e}")
 
     return redirect(url_for('detalle_prestamo', prestamo_id=cuota.prestamo_id))
+
+
+# En la ruta pagar_cuota, y una nueva ruta para las notas
+@app.route('/cuota/<int:cuota_id>/nota', methods=['POST'])
+@login_required
+def guardar_nota(cuota_id):
+    cuota = Cuota.query.get_or_404(cuota_id)
+    cuota.notas = request.form.get('nota')
+    db.session.commit()
+    flash('Nota guardada.', 'success')
+    return redirect(url_for('detalle_prestamo', prestamo_id=cuota.prestamo_id))
+
 
 
 @app.route('/cuota/<int:cuota_id>/revertir', methods=['POST'])
@@ -476,8 +549,6 @@ def crear_cliente():
     return render_template('crear_cliente.html')
 
 
-# En app.py
-
 @app.route('/prestamo/cliente/<int:cliente_id>', methods=['GET', 'POST'])
 @login_required
 def prestamo_para_cliente(cliente_id):
@@ -487,7 +558,7 @@ def prestamo_para_cliente(cliente_id):
         cobradores = Usuario.query.filter(or_(Usuario.rol == 'admin', Usuario.rol == 'cobrador')).all()
 
     if request.method == 'POST':
-        # --- Recopilación de datos del formulario (sin cambios) ---
+        # --- Parte 1: Recopilación de datos (sin cambios) ---
         monto = float(request.form.get('monto'))
         plazo = int(request.form.get('plazo'))
         interes = float(request.form.get('interes'))
@@ -499,20 +570,18 @@ def prestamo_para_cliente(cliente_id):
         total_a_pagar = monto * (1 + (interes / 100) * plazo)
 
         nuevo_prestamo = Prestamo(
-            monto_prestado=monto,
-            tasa_interes_mensual=interes,
-            plazo_meses=plazo,
-            monto_total_a_pagar=total_a_pagar,
-            frecuencia=frecuencia,
-            cobrar_sabado=cobrar_sabado,
-            cobrar_domingo=cobrar_domingo,
-            cliente=cliente,
-            usuario_id=cobrador_id
+            monto_prestado=monto, tasa_interes_mensual=interes, plazo_meses=plazo,
+            monto_total_a_pagar=total_a_pagar, frecuencia=frecuencia,
+            cobrar_sabado=cobrar_sabado, cobrar_domingo=cobrar_domingo,
+            cliente=cliente, usuario_id=cobrador_id
         )
+
+        # --- Parte 2: LÓGICA DE CUOTAS REDONDEADAS (LA PARTE NUEVA) ---
         
-        # --- LÓGICA DE GENERACIÓN DE CUOTAS (CORREGIDA Y COMPLETA) ---
+        # a. Calcular el número total de cuotas
         numero_cuotas = 0
         if frecuencia == 'diaria':
+            # Cálculo preciso de días de pago
             dias_pago_aprox = 0
             for i in range(plazo * 30):
                 dia_semana = (date.today() + timedelta(days=i+1)).weekday()
@@ -523,33 +592,54 @@ def prestamo_para_cliente(cliente_id):
         elif frecuencia == 'semanal': numero_cuotas = plazo * 4
         elif frecuencia == 'quincenal': numero_cuotas = plazo * 2
         elif frecuencia == 'mensual': numero_cuotas = plazo
-
+        
         if numero_cuotas > 0:
-            valor_cuota = round(total_a_pagar / numero_cuotas, 2)
+            # b. Calcular la cuota cruda y redondearla HACIA ARRIBA
+            valor_cuota_crudo = total_a_pagar / numero_cuotas
+            valor_cuota_redondeado = math.ceil(valor_cuota_crudo / 1000) * 1000
+            
+            # c. Generar N-1 cuotas con el valor redondeado
             fecha_actual = date.today() + timedelta(days=1)
-
-            for _ in range(int(numero_cuotas)):
+            for _ in range(int(numero_cuotas) - 1):
+                # ... (lógica para encontrar la fecha de vencimiento que ya funciona)
                 if frecuencia == 'diaria':
                     while True:
                         dia_semana = fecha_actual.weekday()
                         if (dia_semana == 6 and not cobrar_domingo) or (dia_semana == 5 and not cobrar_sabado):
                             fecha_actual += timedelta(days=1)
-                        else:
-                            break
-                
+                        else: break
                 cuota_vencimiento = fecha_actual
-                cuota = Cuota(monto_cuota=valor_cuota, fecha_vencimiento=cuota_vencimiento, prestamo=nuevo_prestamo)
+                
+                cuota = Cuota(monto_cuota=valor_cuota_redondeado, fecha_vencimiento=cuota_vencimiento, prestamo=nuevo_prestamo)
                 db.session.add(cuota)
 
+                # Avanzamos la fecha para la siguiente cuota
                 if frecuencia == 'diaria': fecha_actual += timedelta(days=1)
                 elif frecuencia == 'semanal': fecha_actual += timedelta(weeks=1)
                 elif frecuencia == 'quincenal': fecha_actual += timedelta(days=15)
                 elif frecuencia == 'mensual': fecha_actual += timedelta(days=30)
+            
+            # d. Calcular y añadir la última cuota de ajuste
+            total_pagado_parcial = valor_cuota_redondeado * (numero_cuotas - 1)
+            ultima_cuota_valor = total_a_pagar - total_pagado_parcial
+            
+            # Encontrar la última fecha de vencimiento
+            if frecuencia == 'diaria':
+                while True:
+                    dia_semana = fecha_actual.weekday()
+                    if (dia_semana == 6 and not cobrar_domingo) or (dia_semana == 5 and not cobrar_sabado):
+                        fecha_actual += timedelta(days=1)
+                    else: break
+            ultima_fecha_vencimiento = fecha_actual
+
+            ultima_cuota = Cuota(monto_cuota=ultima_cuota_valor, fecha_vencimiento=ultima_fecha_vencimiento, prestamo=nuevo_prestamo)
+            db.session.add(ultima_cuota)
         
+        # --- Parte 3: Guardar en la base de datos (sin cambios) ---
         try:
             db.session.add(nuevo_prestamo)
             db.session.commit()
-            flash('Préstamo creado exitosamente.', 'success')
+            flash('Préstamo creado exitosamente con cuotas redondeadas.', 'success')
             return redirect(url_for('admin_dashboard'))
         except Exception as e:
             db.session.rollback()
@@ -692,6 +782,28 @@ def configuracion():
         db.session.commit()
         flash('Plantilla de WhatsApp guardada correctamente.', 'success')
         return redirect(url_for('configuracion'))
+
+
+# --- NUEVA LÓGICA PARA EL LOGO ---
+        if 'logo' in request.files:
+            file = request.files['logo']
+            if file and allowed_file(file.filename):
+                filename = "logo." + file.filename.rsplit('.', 1)[1].lower()
+                # Borramos el logo anterior si existe para no acumular archivos
+                for ext in app.config['ALLOWED_EXTENSIONS']:
+                    if os.path.exists(os.path.join(app.config['UPLOAD_FOLDER'], f"logo.{ext}")):
+                        os.remove(os.path.join(app.config['UPLOAD_FOLDER'], f"logo.{ext}"))
+
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+                logo_config = Configuracion.query.filter_by(clave='logo_filename').first()
+                if logo_config:
+                    logo_config.valor = filename
+                else:
+                    db.session.add(Configuracion(clave='logo_filename', valor=filename))
+                db.session.commit()
+                flash('Logo actualizado correctamente.', 'success')
+
 
     # Si se carga la página, mostramos la plantilla actual o una por defecto
     template_actual = template_obj.valor if template_obj else "Hola [cliente], te recordamos que tu cuota de $[monto_cuota] que vencía el [fecha_vencimiento] se encuentra pendiente. ¡Gracias!"

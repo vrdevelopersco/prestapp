@@ -24,10 +24,13 @@
 <div class="d-flex">
     <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar">
         <a href="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center mb-3 text-white text-decoration-none">
-            <i class="bi bi-safe2-fill me-2"></i>
-            <span class="fs-4">PrestApp</span>
-        </a>
-        <hr>
+    {% if logo_url %}
+        <img src="{{ logo_url }}" alt="Logo" height="32">
+    {% else %}
+        <i class="bi bi-safe2-fill me-2"></i><span class="fs-4">PrestApp</span>
+    {% endif %}
+</a>
+<hr>
         <ul class="nav nav-pills flex-column mb-auto">
             <li class="nav-item mb-1">
                 <a href="{{ url_for('admin_dashboard') }}" class="nav-link text-white {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
@@ -79,7 +82,24 @@
             </a>
         </div>
 
-        <hr>
+<hr class="my-4">
+<h3 class="mb-3">Resumen por Cobrador</h3>
+<div class="row">
+    {% for stats in stats_cobradores %}
+    <div class="col-md-4 mb-3">
+        <div class="card">
+            <div class="card-header fw-bold">{{ stats.username }}</div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between">Prestado: <strong>$ {{ stats.prestado }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between">Recaudado: <strong>$ {{ stats.recaudado }}</strong></li>
+                <li class="list-group-item d-flex justify-content-between">Clientes Activos: <strong>{{ stats.clientes_activos }}</strong></li>
+            </ul>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<hr class="my-4">
 
         <h3 class="mb-3">Préstamos Activos</h3>
         <div class="row">
