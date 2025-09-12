@@ -1,5 +1,4 @@
 {% extends 'layout.html' %}
-
 {% block title %}Nuevo Préstamo para {{ cliente.nombre_completo }}{% endblock %}
 
 {% block content %}
@@ -32,17 +31,12 @@
             {% endif %}
 
             {% include '_simulador_componente.html' %}
-
-            <div class="alert alert-info mt-3">
-    </div>
-
-<div class="mb-3">
-    <label for="cuota_manual" class="form-label fw-bold">Fijar Valor de Cuota Manual (Opcional)</label>
-    <input type="number" class="form-control" id="cuota_manual" name="cuota_manual" placeholder="Dejar en blanco para usar la cuota sugerida">
-    <div class="form-text">
-        Si ingresas un valor aquí, el número de cuotas se recalculará automáticamente.
-    </div>
-</div>
+            
+            <div class="my-3">
+                <label for="cuota_manual" class="form-label fw-bold">Fijar Valor de Cuota Manual (Opcional)</label>
+                <input type="number" class="form-control" id="cuota_manual" name="cuota_manual" placeholder="Dejar en blanco para usar la cuota sugerida">
+                <div class="form-text">Si ingresas un valor aquí, el número de cuotas se recalculará.</div>
+            </div>
             
             <div class="d-grid mt-4"><button type="submit" class="btn btn-success btn-lg">Guardar y Crear Préstamo</button></div>
         </form>

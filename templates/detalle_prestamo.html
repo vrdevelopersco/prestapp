@@ -3,14 +3,12 @@
 {% block title %}Detalle del Préstamo #{{ prestamo.id }}{% endblock %}
 
 {% block content %}
-
-<div class="container mt-4">
-    <a href="{{ url_for('admin_dashboard') }}">&laquo; Volver al Dashboard</a>
-    
-    <div class="d-flex justify-content-between align-items-center mt-2">
+<div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h2 class="mb-0">Detalle del Préstamo</h2>
-        </div>
+        <h4 class="text-muted">Cliente: {{ prestamo.cliente.nombre_completo }}</h4>
+        <p class="lead mb-0">Cédula: {{ prestamo.cliente.cedula }}</p>
+    </div>
     {% if current_user.rol == 'admin' %}
     <div class="btn-group">
         <a href="{{ url_for('editar_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-warning">
@@ -25,67 +23,98 @@
     {% endif %}
 </div>
 
-    <p class="lead">Cédula: {{ prestamo.cliente.cedula }}</p>
+<div class="card mt-4">
+    <div class="card-header fw-bold">
+        Cuotas del Préstamo ({{ prestamo.cuotas|length }} en total)
+    </div>
+    <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-    <div class="card mt-4">
-        <div class="card-header fw-bold">Cuotas del Préstamo</div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Fecha de Vencimiento</th>
-                            <th>Monto</th>
-                            <th>Estado</th>
-                            <th>Notas</th> <th>Acción</th>
-                        </tr>
-                    </thead>
-<tbody>
-    {% for cuota in prestamo.cuotas %}
-    <tr class="
-        {% if cuota.estado == 'pagada' %}table-success
-        {% elif cuota.estado == 'atrasada' %}table-danger
-        {% elif cuota.fecha_vencimiento == today %}table-warning
-        {% endif %}
-    ">
-        <td>{{ loop.index }}</td>
-        <td>{{ cuota.fecha_vencimiento.strftime('%d de %B, %Y') }}</td>
-        <td>${{ cuota.monto_cuota|int }}</td>
-        <td><span class="badge 
-            {% if cuota.estado == 'pagada' %}bg-success
-            {% elif cuota.estado == 'atrasada' %}bg-danger
-            {% else %}bg-secondary
-            {% endif %}
-        ">{{ cuota.estado|capitalize }}</span>
-        </td>
-        <td>
-            {% if cuota.estado in ['pendiente', 'atrasada'] %}
-                <form method="POST" action="{{ url_for('pagar_cuota', cuota_id=cuota.id) }}">
-    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#notaModal{{ cuota.id }}">
-        Nota
-    </button>
-    <button type="submit" class="btn btn-sm btn-success">Pagar</button>
-</form>
-            {% elif cuota.estado == 'pagada' and current_user.rol == 'admin' %}
-                <form method="POST" action="{{ url_for('revertir_pago_cuota', cuota_id=cuota.id) }}" class="d-inline">
-                    <button type="submit" class="btn btn-sm btn-warning">
-                        <i class="bi bi-arrow-counterclockwise"></i> Revertir
-                    </button>
-                </form>
-            {% else %}
-                -
-            {% endif %}
-        </td>
-    </tr>
-    {% endfor %}
-</tbody>
-                </table>
-            </div>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Fecha Venc.</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Notas</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cuota in prestamo.cuotas %}
+                    <tr class="
+                        {% if cuota.estado == 'pagada' %}table-success
+                        {% elif cuota.fecha_vencimiento < today and cuota.estado == 'pendiente' %}table-danger
+                        {% elif cuota.fecha_vencimiento == today and cuota.estado == 'pendiente' %}table-warning
+                        {% endif %}
+                    ">
+                        <td>{{ loop.index }}</td>
+                        <td>{{ cuota.fecha_vencimiento.strftime('%d/%m/%Y') }}</td>
+                        <td>${{ cuota.monto_cuota|int }}</td>
+                        <td>
+                            <span class="badge 
+                                {% if cuota.estado == 'pagada' %}bg-success
+                                {% elif cuota.fecha_vencimiento < today and cuota.estado == 'pendiente' %}bg-danger
+                                {% else %}bg-secondary
+                                {% endif %}
+                            ">
+                                {% if cuota.fecha_vencimiento < today and cuota.estado == 'pendiente' %}
+                                    Atrasada
+                                {% else %}
+                                    {{ cuota.estado|capitalize }}
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td>{{ cuota.notas or 'Sin notas' }}</td>
+                        <td>
+                            {% if cuota.estado == 'pendiente' or (cuota.fecha_vencimiento < today and cuota.estado == 'pendiente') %}
+                                <form method="POST" action="{{ url_for('pagar_cuota', cuota_id=cuota.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-success">Pagar</button>
+                                </form>
+                            {% elif cuota.estado == 'pagada' and current_user.rol == 'admin' %}
+                                <form method="POST" action="{{ url_for('revertir_pago_cuota', cuota_id=cuota.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-warning">Revertir</button>
+                                </form>
+                            {% endif %}
+                             <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#notaModal{{ cuota.id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-</body>
-</html>
 
+{% for cuota in prestamo.cuotas %}
+<div class="modal fade" id="notaModal{{ cuota.id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nota para Cuota #{{ loop.index }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('guardar_nota', cuota_id=cuota.id) }}">
+                <div class="modal-body">
+                    <textarea name="nota" class="form-control" rows="4" placeholder="Escribe una observación...">{{ cuota.notas or '' }}</textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Nota</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

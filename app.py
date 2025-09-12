@@ -462,9 +462,9 @@ def pagar_cuota(cuota_id):
 @login_required
 def guardar_nota(cuota_id):
     cuota = Cuota.query.get_or_404(cuota_id)
-    cuota.notas = request.form.get('nota')
+    cuota.notas = request.form.get('nota', '') # Recoge la nota del formulario
     db.session.commit()
-    flash('Nota guardada.', 'success')
+    flash('Nota guardada correctamente.', 'info')
     return redirect(url_for('detalle_prestamo', prestamo_id=cuota.prestamo_id))
 
 
