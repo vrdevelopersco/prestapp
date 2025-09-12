@@ -569,7 +569,7 @@ def prestamo_para_cliente(cliente_id):
         fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date() if fecha_inicio_str else date.today()
         total_a_pagar = monto * (1 + (interes / 100) * plazo)
         
-        # --- 2. Crear el objeto Préstamo (aún sin guardar) ---
+        # --- 2. Crear el objeto Préstamo ---
         nuevo_prestamo = Prestamo(
             monto_prestado=monto, tasa_interes_mensual=interes, plazo_meses=plazo,
             monto_total_a_pagar=total_a_pagar, frecuencia=frecuencia,
@@ -579,48 +579,78 @@ def prestamo_para_cliente(cliente_id):
         )
         
         # --- 3. Lógica de Cuotas: Decidir si es manual o sugerida ---
-        if cuota_manual_str and float(cuota_manual_str) > 0:
-            # Opción A: El usuario fijó una cuota manual
-            valor_cuota_final = float(cuota_manual_str)
-            numero_cuotas = math.ceil(total_a_pagar / valor_cuota_final)
-        else:
-            # Opción B: Usamos la cuota sugerida (redondeada)
-            # (Lógica de cálculo de numero_cuotas que ya funciona)
-            # ...
-            valor_cuota_sugerida = round(total_a_pagar / numero_cuotas, 2) if numero_cuotas > 0 else 0
-            valor_cuota_final = math.ceil(valor_cuota_sugerida / 1000) * 1000 # Redondeo
+        numero_cuotas = 0
+        if frecuencia == 'diaria':
+            dias_pago_aprox = 0
+            for i in range(plazo * 30):
+                dia_semana = (fecha_inicio + timedelta(days=i+1)).weekday()
+                if (dia_semana == 6 and not cobrar_domingo) or (dia_semana == 5 and not cobrar_sabado):
+                    continue
+                dias_pago_aprox += 1
+            numero_cuotas = dias_pago_aprox
+        elif frecuencia == 'semanal': numero_cuotas = plazo * 4
+        elif frecuencia == 'quincenal': numero_cuotas = plazo * 2
+        elif frecuencia == 'mensual': numero_cuotas = plazo
 
-        # --- 4. Generar las cuotas con el valor final decidido ---
-        if numero_cuotas > 0:
+        valor_cuota_final = 0
+        if cuota_manual_str and float(cuota_manual_str) > 0:
+            valor_cuota_final = float(cuota_manual_str)
+            if valor_cuota_final > 0:
+                numero_cuotas = math.ceil(total_a_pagar / valor_cuota_final)
+        else:
+            if numero_cuotas > 0:
+                valor_cuota_sugerida = total_a_pagar / numero_cuotas
+                valor_cuota_final = math.ceil(valor_cuota_sugerida / 1000) * 1000
+
+        # --- 4. Generar las cuotas con el valor y fecha correctos ---
+        if numero_cuotas > 0 and valor_cuota_final > 0:
             fecha_actual = fecha_inicio + timedelta(days=1)
             # Generamos N-1 cuotas
             for _ in range(int(numero_cuotas) - 1):
-                # (Lógica de encontrar la fecha de vencimiento que ya funciona)
-                # ...
-                cuota = Cuota(monto_cuota=valor_cuota_final, ...)
+                if frecuencia == 'diaria':
+                    while True:
+                        dia_semana = fecha_actual.weekday()
+                        if (dia_semana == 6 and not cobrar_domingo) or (dia_semana == 5 and not cobrar_sabado):
+                            fecha_actual += timedelta(days=1)
+                        else: break
+                cuota_vencimiento = fecha_actual
+                
+                # CÓDIGO CORREGIDO SIN PLACEHOLDERS
+                cuota = Cuota(monto_cuota=valor_cuota_final, fecha_vencimiento=cuota_vencimiento, prestamo=nuevo_prestamo)
                 db.session.add(cuota)
+
+                if frecuencia == 'diaria': fecha_actual += timedelta(days=1)
+                elif frecuencia == 'semanal': fecha_actual += timedelta(weeks=1)
+                elif frecuencia == 'quincenal': fecha_actual += timedelta(days=15)
+                elif frecuencia == 'mensual': fecha_actual += timedelta(days=30)
             
             # Generamos la última cuota de ajuste
             total_parcial = valor_cuota_final * (numero_cuotas - 1)
             ultima_cuota_valor = total_a_pagar - total_parcial
-            ultima_cuota = Cuota(monto_cuota=ultima_cuota_valor, ...)
-            db.session.add(ultima_cuota)
+            if ultima_cuota_valor > 0:
+                # Lógica para encontrar la última fecha de vencimiento
+                if frecuencia == 'diaria':
+                    while True:
+                        dia_semana = fecha_actual.weekday()
+                        if (dia_semana == 6 and not cobrar_domingo) or (dia_semana == 5 and not cobrar_sabado):
+                            fecha_actual += timedelta(days=1)
+                        else: break
+                
+                # CÓDIGO CORREGIDO SIN PLACEHOLDERS
+                ultima_cuota = Cuota(monto_cuota=ultima_cuota_valor, fecha_vencimiento=fecha_actual, prestamo=nuevo_prestamo)
+                db.session.add(ultima_cuota)
 
-        # ... (try/except para guardar en la base de datos) ...
         try:
             db.session.add(nuevo_prestamo)
             db.session.commit()
-            flash('Préstamo creado exitosamente con cuotas redondeadas.', 'success')
+            flash('Préstamo creado exitosamente.', 'success')
             return redirect(url_for('admin_dashboard'))
         except Exception as e:
             db.session.rollback()
             flash(f'Error al crear el préstamo: {e}', 'danger')
             app.logger.error(f"Error en creación de préstamo: {e}")
 
-    # --- Lógica para el método GET ---
-    cobradores = []
-    if current_user.rol == 'admin':
-        cobradores = Usuario.query.filter(or_(Usuario.rol == 'admin', Usuario.rol == 'cobrador')).all()
+    cobradores = Usuario.query.filter(or_(Usuario.rol == 'admin', Usuario.rol == 'cobrador')).all()
     fecha_hoy_str = date.today().strftime('%Y-%m-%d')
     return render_template('prestamo_final.html', cliente=cliente, cobradores=cobradores, fecha_hoy=fecha_hoy_str)
 
