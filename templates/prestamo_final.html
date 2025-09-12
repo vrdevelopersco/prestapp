@@ -30,14 +30,21 @@
             </div>
             {% endif %}
 
-            {% include '_simulador_componente.html' %}
-            
-            <div class="my-3">
-                <label for="cuota_manual" class="form-label fw-bold">Fijar Valor de Cuota Manual (Opcional)</label>
-                <input type="number" class="form-control" id="cuota_manual" name="cuota_manual" placeholder="Dejar en blanco para usar la cuota sugerida">
-                <div class="form-text">Si ingresas un valor aquí, el número de cuotas se recalculará.</div>
+       {% include '_simulador_componente.html' %}
+
+            <hr>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="fecha_inicio" class="form-label fw-bold">Fecha de Inicio del Préstamo</label>
+                    <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" value="{{ fecha_hoy }}">
+                    <div class="form-text">La primera cuota se generará al día siguiente de esta fecha.</div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label for="cuota_manual" class="form-label fw-bold">Fijar Valor de Cuota (Opcional)</label>
+                    <input type="number" class="form-control" id="cuota_manual" name="cuota_manual" step="1000" placeholder="Usar valor sugerido">
+                    <div class="form-text">Si se define, el número de cuotas se ajustará.</div>
+                </div>
             </div>
-            
             <div class="d-grid mt-4"><button type="submit" class="btn btn-success btn-lg">Guardar y Crear Préstamo</button></div>
         </form>
     </div>
