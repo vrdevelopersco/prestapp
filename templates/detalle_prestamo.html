@@ -14,6 +14,9 @@
         <a href="{{ url_for('editar_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-warning">
             <i class="bi bi-pencil-square"></i> Editar
         </a>
+        <a href="{{ url_for('reestructurar_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-info">
+            <i class="bi bi-arrow-repeat"></i> Reestructurar
+        </a>
         <form method="POST" action="{{ url_for('eliminar_prestamo', prestamo_id=prestamo.id) }}" class="d-inline" onsubmit="return confirm('¿Estás SEGURO de que deseas eliminar este préstamo y TODAS sus cuotas? Esta acción no se puede deshacer.');">
             <button type="submit" class="btn btn-danger">
                 <i class="bi bi-trash-fill"></i> Eliminar

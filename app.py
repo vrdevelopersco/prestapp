@@ -816,6 +816,67 @@ def configuracion():
     return render_template('configuracion.html', template_actual=template_actual)
 
 
+@app.route('/prestamo/<int:prestamo_id>/reestructurar', methods=['GET', 'POST'])
+@login_required
+def reestructurar_prestamo(prestamo_id):
+    if current_user.rol != 'admin':
+        flash('No tienes permiso para esta acción.', 'danger')
+        return redirect(url_for('index'))
+
+    prestamo = Prestamo.query.get_or_404(prestamo_id)
+
+    # 1. Calcular el estado actual del préstamo
+    cuotas_pagadas = [c for c in prestamo.cuotas if c.estado in ['pagada', 'pagada_tarde']]
+    total_pagado = sum(c.monto_cuota for c in cuotas_pagadas)
+    saldo_pendiente = prestamo.monto_total_a_pagar - total_pagado
+
+    if request.method == 'POST':
+        nuevo_valor_cuota_str = request.form.get('nueva_cuota')
+        if not nuevo_valor_cuota_str or float(nuevo_valor_cuota_str) <= 0:
+            flash('Debes ingresar un valor de cuota válido.', 'warning')
+            return redirect(url_for('reestructurar_prestamo', prestamo_id=prestamo.id))
+        
+        nuevo_valor_cuota = float(nuevo_valor_cuota_str)
+
+        try:
+            # --- INICIO DE LA TRANSACCIÓN SEGURA ---
+            # 2. Borrar SOLO las cuotas pendientes
+            Cuota.query.filter_by(prestamo_id=prestamo.id, estado='pendiente').delete()
+            
+            # 3. Calcular y generar el nuevo plan de pagos
+            nuevo_numero_cuotas = math.ceil(saldo_pendiente / nuevo_valor_cuota)
+            fecha_actual = date.today() + timedelta(days=1)
+            
+            for _ in range(int(nuevo_numero_cuotas) - 1):
+                # (Aquí va tu lógica para encontrar la próxima fecha de pago válida)
+                cuota = Cuota(monto_cuota=nuevo_valor_cuota, fecha_vencimiento=fecha_actual, prestamo_id=prestamo.id)
+                db.session.add(cuota)
+                fecha_actual += timedelta(days=1) # O la frecuencia que corresponda
+
+            # Última cuota de ajuste
+            total_parcial = nuevo_valor_cuota * (nuevo_numero_cuotas - 1)
+            ultima_cuota_valor = saldo_pendiente - total_parcial
+            if ultima_cuota_valor > 0:
+                ultima_cuota = Cuota(monto_cuota=ultima_cuota_valor, fecha_vencimiento=fecha_actual, prestamo_id=prestamo.id)
+                db.session.add(ultima_cuota)
+
+            db.session.commit()
+            # --- FIN DE LA TRANSACCIÓN ---
+            flash('¡Préstamo reestructurado exitosamente!', 'success')
+            return redirect(url_for('detalle_prestamo', prestamo_id=prestamo.id))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al reestructurar el préstamo: {e}', 'danger')
+            app.logger.error(f"Error reestructurando préstamo {prestamo_id}: {e}")
+            return redirect(url_for('detalle_prestamo', prestamo_id=prestamo.id))
+
+    # Si es GET, solo mostramos la página de resumen
+    return render_template('reestructurar_prestamo.html', 
+                           prestamo=prestamo, 
+                           total_pagado=total_pagado, 
+                           saldo_pendiente=saldo_pendiente)
+
 
 @app.route('/consulta')
 def consulta_cliente():

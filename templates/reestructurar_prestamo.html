@@ -1,0 +1,29 @@
+{% extends 'layout.html' %}
+{% block title %}Reestructurar Préstamo{% endblock %}
+{% block content %}
+<h2 class="mb-4">Reestructurar Préstamo #{{ prestamo.id }}</h2>
+<div class="card">
+    <div class="card-body">
+        <div class="alert alert-secondary">
+            <h5 class="alert-heading">Resumen Financiero Actual</h5>
+            <p>Monto Total del Préstamo: <strong>${{ prestamo.monto_total_a_pagar|int }}</strong></p>
+            <p>Total Pagado hasta la Fecha: <strong class="text-success">${{ total_pagado|int }}</strong></p>
+            <hr>
+            <p class="mb-0">Saldo Pendiente a Reestructurar: <strong class="text-danger fs-5">${{ saldo_pendiente|int }}</strong></p>
+        </div>
+
+        <form method="POST">
+            <div class="mb-3">
+                <label for="nueva_cuota" class="form-label fw-bold">Nuevo Valor de Cuota</label>
+                <input type="number" class="form-control" id="nueva_cuota" name="nueva_cuota" step="1000" required>
+                <div class="form-text">Se borrarán las cuotas pendientes y se generará un nuevo plan de pagos para cubrir el saldo.</div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{{ url_for('detalle_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-secondary">Cancelar</a>
+                <button type="submit" class="btn btn-primary" onclick="return confirm('¿Estás seguro de reestructurar este préstamo? Se generará un nuevo plan de pagos.');">Confirmar y Reestructurar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
