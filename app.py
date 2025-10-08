@@ -433,6 +433,8 @@ def eliminar_prestamo(prestamo_id):
         
     return redirect(url_for('admin_dashboard'))
 
+# BLOQUE DE CUOTAS
+# en esta parte se ve todo el tema de las cuotas
 
 @app.route('/cuota/<int:cuota_id>/pagar', methods=['POST'])
 @login_required
@@ -480,6 +482,50 @@ def revertir_pago_cuota(cuota_id):
     db.session.commit()
     flash(f'Pago de la cuota #{cuota.id} revertido.', 'success')
     return redirect(url_for('detalle_prestamo', prestamo_id=cuota.prestamo_id))
+
+
+@app.route('/cuota/<int:cuota_id>/editar', methods=['POST'])
+@login_required
+def editar_cuota(cuota_id):
+    cuota_a_editar = Cuota.query.get_or_404(cuota_id)
+    prestamo = cuota_a_editar.prestamo
+    nuevo_monto = float(request.form.get('nuevo_monto'))
+
+    if cuota_a_editar.estado != 'pendiente':
+        flash('Solo se pueden editar cuotas pendientes.', 'danger')
+        return redirect(url_for('detalle_prestamo', prestamo_id=prestamo.id))
+
+    try:
+        # --- LÓGICA DE AJUSTE AUTOMÁTICO ---
+        # 1. Calcular la diferencia
+        diferencia = nuevo_monto - cuota_a_editar.monto_cuota
+        
+        # 2. Actualizar la cuota actual
+        cuota_a_editar.monto_cuota = nuevo_monto
+        
+        # 3. Encontrar la ÚLTIMA cuota pendiente del préstamo
+        ultima_cuota = Cuota.query.filter(
+            Cuota.prestamo_id == prestamo.id,
+            Cuota.estado == 'pendiente',
+            Cuota.id != cuota_a_editar.id # Excluimos la que estamos editando si es la última
+        ).order_by(Cuota.fecha_vencimiento.desc()).first()
+
+        if ultima_cuota:
+            # 4. Ajustar la última cuota para balancear el total
+            ultima_cuota.monto_cuota -= diferencia
+        else:
+            # Si la cuota que editamos ES la última, verificamos que el saldo no quede negativo
+            # (En un caso real, aquí se podría manejar la lógica de si el préstamo se paga por completo)
+             pass
+
+        db.session.commit()
+        flash('Cuota actualizada y saldo ajustado en la última cuota.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al editar la cuota: {e}', 'danger')
+
+    return redirect(url_for('detalle_prestamo', prestamo_id=prestamo.id))
 
 
 

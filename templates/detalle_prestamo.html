@@ -82,6 +82,9 @@
                                 <form method="POST" action="{{ url_for('pagar_cuota', cuota_id=cuota.id) }}" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-success">Pagar</button>
                                 </form>
+                                <button type="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editarCuotaModal{{ cuota.id }}">
+                                    Editar
+                                </button>
                             {% elif cuota.estado == 'pagada' and current_user.rol == 'admin' %}
                                 <form method="POST" action="{{ url_for('revertir_pago_cuota', cuota_id=cuota.id) }}" class="d-inline">
                                     <button type="submit" class="btn btn-sm btn-warning">Revertir</button>
@@ -120,4 +123,38 @@
     </div>
 </div>
 {% endfor %}
+
+
+{% for cuota in prestamo.cuotas %}
+    {# Solo creamos el modal si la cuota está pendiente, para no gastar recursos innecesariamente #}
+    {% if cuota.estado in ['pendiente', 'atrasada'] %}
+    <div class="modal fade" id="editarCuotaModal{{ cuota.id }}" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Monto de Cuota #{{ loop.index }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('editar_cuota', cuota_id=cuota.id) }}">
+                    <div class="modal-body">
+                        <p>Valor actual: <strong>${{ cuota.monto_cuota|int }}</strong></p>
+                        <div class="mb-3">
+                            <label for="nuevo_monto_{{ cuota.id }}" class="form-label">Nuevo Monto para esta Cuota</label>
+                            <input type="number" class="form-control" id="nuevo_monto_{{ cuota.id }}" name="nuevo_monto" value="{{ cuota.monto_cuota|int }}" required>
+                        </div>
+                        <div class="alert alert-warning small">
+                            <strong>Atención:</strong> Cambiar este valor ajustará automáticamente el monto de la **última cuota** del préstamo para mantener el saldo total.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambio</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
 {% endblock %}
