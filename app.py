@@ -89,6 +89,11 @@ class Prestamo(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
     cuotas = db.relationship('Cuota', backref='prestamo', lazy=True, cascade="all, delete-orphan")
 
+    valor_articulo = db.Column(db.Float, nullable=True) # El valor total del bien
+    abono_inicial = db.Column(db.Float, nullable=True, default=0) # El downpayment
+    monto_prestado = db.Column(db.Float, nullable=False) # Este será el monto a financiar
+
+
 class Cuota(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     monto_cuota = db.Column(db.Float, nullable=False)
