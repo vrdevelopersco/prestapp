@@ -1,14 +1,20 @@
 # create_admin.py
+import os
+from dotenv import load_dotenv
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 
-# COPIA Y PEGA LA MISMA CONFIGURACIÓN DE TU APP.PY
+# Carga la configuración desde .env (mismas variables que app.py)
+load_dotenv()
 app = Flask(__name__)
-DB_USER = "u718598814_panconqueso"
-DB_PASS = "Miloyfrutas!1"
-DB_HOST = "srv1264.hstgr.io"
-DB_NAME = "u718598814_creditossas1"
+DB_USER = os.environ.get('DB_USER')
+DB_PASS = os.environ.get('DB_PASS')
+DB_HOST = os.environ.get('DB_HOST')
+DB_NAME = os.environ.get('DB_NAME')
+
+if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
+    raise ValueError("Faltan variables de entorno para la base de datos. Configura el archivo .env")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 db = SQLAlchemy(app)

@@ -9,3 +9,10 @@ __pycache__/
 *.db
 *.sqlite3
 
+# Variables de entorno y notas internas
+.env
+ESTADO_PROYECTO.md
+
+# Backups de base de datos (contienen datos de clientes)
+*.sql
+
