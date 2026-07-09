@@ -230,9 +230,68 @@
     box-shadow: 0 12px 26px -10px rgba(13,148,136,.8);
   }
 
+  /* ---- App shell: barra móvil + sidebar fijo (desktop) + offcanvas ---- */
+  .app-topbar {
+    display: flex; align-items: center; gap: .5rem;
+    position: sticky; top: 0; z-index: 1030;
+    padding: .55rem .85rem; min-height: 56px;
+    background: linear-gradient(90deg,#0d3b37,#0a2530);
+    color: #fff; box-shadow: var(--shadow-sm);
+  }
+  .app-topbar .btn-menu {
+    color: #fff; font-size: 1.55rem; line-height: 1; padding: .1rem .5rem;
+    background: transparent; border: 0;
+  }
+  .app-topbar-brand {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;
+    font-size: 1.15rem; letter-spacing: -.02em;
+  }
+  .sidebar-brand .fs-4 { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
+  .offcanvas.sidebar { width: 82vw; max-width: 300px; }
+  .offcanvas.sidebar .offcanvas-header { border-bottom: 1px solid rgba(255,255,255,.12); }
+
+  @media (min-width: 992px) {
+    .app-shell { align-items: flex-start; }
+    .sidebar.d-lg-flex {
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+      padding-bottom: 56px !important;
+    }
+  }
+
+  /* ---- Modales ---- */
+  .modal-content {
+    border: 0; border-radius: 18px; overflow: hidden;
+    box-shadow: 0 30px 70px -25px rgba(16,35,58,.5);
+  }
+  .modal-header { border-bottom: 1px solid var(--line); padding: 1.05rem 1.25rem; }
+  .modal-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; }
+  .modal-body { padding: 1.25rem; }
+  .modal-footer { border-top: 1px solid var(--line); }
+  .kv { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px dashed var(--line); gap: 1rem; }
+  .kv:last-child { border-bottom: 0; }
+  .kv-label { color: var(--muted); font-size: .9rem; }
+  .kv-val { font-weight: 700; font-family: 'Plus Jakarta Sans', sans-serif; text-align: right; }
+
+  /* ---- Tarjeta de préstamo tappable ---- */
+  .loan-card { cursor: pointer; }
+  .loan-card:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .loan-card:active { transform: translateY(0) scale(.995); }
+
+  /* ---- Responsive "tipo app" ---- */
+  @media (max-width: 991.98px) {
+    .content { padding: 1rem; padding-bottom: 78px; }
+    .footer { font-size: .68rem; }
+  }
   @media (max-width: 575.98px) {
-    .stat-value { font-size: 1.45rem; }
-    .content { padding: 1.1rem; padding-bottom: 72px; }
+    .stat .card-body { padding: .9rem 1rem; gap: .7rem; }
+    .stat-icon { width: 40px; height: 40px; font-size: 1.1rem; }
+    .stat-value { font-size: 1.3rem; }
+    .stat-label { font-size: .63rem; letter-spacing: .05em; }
+    h2 { font-size: 1.5rem; }
+    .section-title { font-size: 1.05rem; }
+    .btn-lg { padding: .65rem 1rem; font-size: 1rem; }
+    .content { padding: .85rem; padding-bottom: 78px; }
+    .card { border-radius: 14px; }
   }
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }

@@ -1,87 +1,31 @@
-<!doctype html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard Admin</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    {% include '_theme.html' %}
-</head>
-<body>
-<div class="d-flex">
-    <div class="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark sidebar">
-        <a href="{{ url_for('admin_dashboard') }}" class="d-flex align-items-center mb-3 text-white text-decoration-none">
-    {% if logo_url %}
-        <img src="{{ logo_url }}" alt="Logo" height="32">
-    {% else %}
-        <i class="bi bi-safe2-fill me-2"></i><span class="fs-4">PrestApp</span>
-    {% endif %}
-</a>
-<hr>
-        <ul class="nav nav-pills flex-column mb-auto">
-            <li class="nav-item mb-1">
-                <a href="{{ url_for('admin_dashboard') }}" class="nav-link text-white {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
-                    <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('gestion_clientes') }}" class="nav-link text-white {% if request.endpoint == 'gestion_clientes' %}active{% endif %}">
-                    <i class="bi bi-people-fill me-2"></i>Gestión de Clientes
-                </a>
-            </li>
-            <li>
-                <a href="{{ url_for('gestion_usuarios') }}" class="nav-link text-white {% if request.endpoint == 'gestion_usuarios' %}active{% endif %}">
-                <i class="bi bi-person-gear me-2"></i>Gestión de Usuarios
-            </a>
-            </li>
-            <li>
-                <a href="{{ url_for('simulador') }}" class="nav-link text-white {% if request.endpoint == 'simulador' %}active{% endif %}">
-                    <i class="bi bi-calculator me-2"></i>Simulador de Crédito
-                </a>
-            </li>
-            <li>
-<a href="{{ url_for('configuracion') }}" class="nav-link text-white {% if request.endpoint == 'configuracion' %}active{% endif %}">
-    <i class="bi bi-whatsapp me-2"></i>Configuración
-</a>
-            </li>
-        </ul>
+{% extends 'layout.html' %}
+{% block title %}Dashboard Admin{% endblock %}
 
-        <ul class="nav nav-pills flex-column">
-    <li class="nav-item">
-        <a href="{{ url_for('logout') }}" class="nav-link text-warning">
-            <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
-        </a>
-    </li>
-</ul>
-        
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h2 class="mb-0">Panel de control</h2>
+        <p class="text-muted mb-0">Resumen de tu cartera al día de hoy.</p>
     </div>
+    <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#modalNuevoPrestamo">
+        <i class="bi bi-journal-plus me-2"></i>Nuevo préstamo
+    </button>
+</div>
 
-    <div class="d-flex flex-column flex-grow-1">
-       <main class="content">
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
-            <div>
-                <h2 class="mb-0">Panel de control</h2>
-                <p class="text-muted mb-0">Resumen de tu cartera al día de hoy.</p>
-            </div>
-            <a href="{{ url_for('crear_prestamo') }}" class="btn btn-primary btn-lg">
-                <i class="bi bi-journal-plus me-2"></i>Nuevo préstamo
-            </a>
-        </div>
-        <div class="row g-3">
-            <div class="col-md-3 col-6"><div class="card stat stat--brand h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-cash-stack"></i></div><div><div class="stat-label">Total Prestado</div><div class="stat-value">$ {{ metricas.total_prestado }}</div></div></div></div></div>
-            <div class="col-md-3 col-6"><div class="card stat stat--ok h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-graph-up-arrow"></i></div><div><div class="stat-label">Total Recaudado</div><div class="stat-value">$ {{ metricas.total_recaudado }}</div></div></div></div></div>
-            <div class="col-md-3 col-6"><div class="card stat stat--warn h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div><div><div class="stat-label">Cartera Pendiente</div><div class="stat-value">$ {{ metricas.cartera_pendiente }}</div></div></div></div></div>
-            <div class="col-md-3 col-6"><div class="card stat stat--slate h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-people-fill"></i></div><div><div class="stat-label">Clientes Activos</div><div class="stat-value">{{ metricas.clientes_activos }}</div></div></div></div></div>
-        </div>
+<div class="row g-3">
+    <div class="col-md-3 col-6"><div class="card stat stat--brand h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-cash-stack"></i></div><div><div class="stat-label">Total Prestado</div><div class="stat-value">$ {{ metricas.total_prestado }}</div></div></div></div></div>
+    <div class="col-md-3 col-6"><div class="card stat stat--ok h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-graph-up-arrow"></i></div><div><div class="stat-label">Total Recaudado</div><div class="stat-value">$ {{ metricas.total_recaudado }}</div></div></div></div></div>
+    <div class="col-md-3 col-6"><div class="card stat stat--warn h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div><div><div class="stat-label">Cartera Pendiente</div><div class="stat-value">$ {{ metricas.cartera_pendiente }}</div></div></div></div></div>
+    <div class="col-md-3 col-6"><div class="card stat stat--slate h-100"><div class="card-body"><div class="stat-icon"><i class="bi bi-people-fill"></i></div><div><div class="stat-label">Clientes Activos</div><div class="stat-value">{{ metricas.clientes_activos }}</div></div></div></div></div>
+</div>
 
 <hr class="my-4">
 <h3 class="section-title">Resumen por Cobrador</h3>
 <div class="row">
     {% for stats in stats_cobradores %}
     <div class="col-md-4 mb-3">
-        <div class="card">
-            <div class="card-header fw-bold">{{ stats.username }}</div>
+        <div class="card h-100">
+            <div class="card-header fw-bold"><i class="bi bi-person-badge me-2"></i>{{ stats.username }}</div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item d-flex justify-content-between">Prestado: <strong>$ {{ stats.prestado }}</strong></li>
                 <li class="list-group-item d-flex justify-content-between">Recaudado: <strong>$ {{ stats.recaudado }}</strong></li>
@@ -93,57 +37,115 @@
 </div>
 
 <hr class="my-4">
-
-        <h3 class="section-title">Préstamos Activos</h3>
-        <div class="row">
-            {% for prestamo in prestamos %}
-            <div class="col-md-4 mb-3">
-    <div class="card h-100 hover-lift
-        {% if prestamo.estado_visual == 'en_mora' %}border-danger border-2
-        {% elif prestamo.estado_visual == 'proximo_vencer' %}border-warning border-2
-        {% endif %}">
-        <div class="card-body">
-            <h5 class="card-title">
-                {{ prestamo.cliente.nombre_completo }}
-                {% if prestamo.estado_visual == 'en_mora' %}
-                    <span class="badge bg-danger ms-2">En Mora</span>
-                {% elif prestamo.estado_visual == 'proximo_vencer' %}
-                    <span class="badge bg-warning text-dark ms-2">Próximo a Vencer</span>
-                {% else %}
-                    <span class="badge bg-success ms-2">Al día</span>
-                {% endif %}
-            </h5>
-            <h6 class="card-subtitle mb-2 text-muted">C.C. {{ prestamo.cliente.cedula }}</h6>
-            <p class="card-text">
-                <strong>Monto:</strong> ${{ prestamo.monto_prestado|int }} <br>
-                <strong>Cobrador:</strong> {{ prestamo.cobrador.username }}
-            </p>
-            <small class="text-muted">Progreso del Pago</small>
-            <div class="progress mb-2" style="height: 20px;">
-                <div class="progress-bar 
-                    {% if prestamo.estado_visual == 'en_mora' %}bg-danger
-                    {% elif prestamo.estado_visual == 'proximo_vencer' %}bg-warning
-                    {% else %}bg-success
-                    {% endif %}"
-                    role="progressbar" style="width: {{ prestamo.progreso }}%;" aria-valuenow="{{ prestamo.progreso }}">
-                    {{ prestamo.progreso }}%
+<h3 class="section-title">Préstamos Activos</h3>
+<div class="row">
+    {% for prestamo in prestamos %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 hover-lift loan-card
+            {% if prestamo.estado_visual == 'en_mora' %}border-danger border-2
+            {% elif prestamo.estado_visual == 'proximo_vencer' %}border-warning border-2{% endif %}"
+            role="button" tabindex="0" data-bs-toggle="modal" data-bs-target="#loan{{ prestamo.id }}">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title mb-1">{{ prestamo.cliente.nombre_completo }}</h5>
+                    {% if prestamo.estado_visual == 'en_mora' %}
+                        <span class="badge bg-danger">En Mora</span>
+                    {% elif prestamo.estado_visual == 'proximo_vencer' %}
+                        <span class="badge bg-warning">Próximo</span>
+                    {% else %}
+                        <span class="badge bg-success">Al día</span>
+                    {% endif %}
+                </div>
+                <h6 class="card-subtitle mb-2 text-muted">C.C. {{ prestamo.cliente.cedula }}</h6>
+                <p class="card-text mb-2">
+                    <strong>Monto:</strong> ${{ prestamo.monto_prestado|int }} ·
+                    <strong>Cobrador:</strong> {{ prestamo.cobrador.username }}
+                </p>
+                <small class="text-muted">Progreso del pago</small>
+                <div class="progress mt-1" style="height: 18px;">
+                    <div class="progress-bar
+                        {% if prestamo.estado_visual == 'en_mora' %}bg-danger
+                        {% elif prestamo.estado_visual == 'proximo_vencer' %}bg-warning
+                        {% else %}bg-success{% endif %}"
+                        role="progressbar" style="width: {{ prestamo.progreso }}%;">{{ prestamo.progreso }}%</div>
                 </div>
             </div>
-            <a href="{{ url_for('detalle_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-sm btn-outline-primary">Ver Detalles</a>
+        </div>
+    </div>
+    {% else %}
+        <div class="col"><div class="alert alert-secondary">No hay préstamos activos para mostrar.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Modal: nuevo préstamo (verificar cédula) -->
+<div class="modal fade" id="modalNuevoPrestamo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('buscar_o_crear_cliente') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-journal-plus me-2"></i>Nuevo préstamo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted">Ingresa la cédula del cliente para iniciar la solicitud.</p>
+                    <label for="cedula_np" class="form-label">Cédula del cliente</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white text-muted"><i class="bi bi-person-vcard"></i></span>
+                        <input type="text" class="form-control" id="cedula_np" name="cedula" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-right me-1"></i>Buscar / Continuar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
-            {% else %}
-                <div class="col"><div class="alert alert-secondary">No hay préstamos activos para mostrar.</div></div>
-            {% endfor %}
-        </div> </main>
+
+<!-- Modales: vista rápida de cada préstamo -->
+{% for prestamo in prestamos %}
+<div class="modal fade" id="loan{{ prestamo.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title">{{ prestamo.cliente.nombre_completo }}</h5>
+                    <div class="mt-1">
+                        {% if prestamo.estado_visual == 'en_mora' %}<span class="badge bg-danger">En Mora</span>
+                        {% elif prestamo.estado_visual == 'proximo_vencer' %}<span class="badge bg-warning">Próximo a Vencer</span>
+                        {% else %}<span class="badge bg-success">Al día</span>{% endif %}
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="kv"><span class="kv-label">Cédula</span><span class="kv-val">{{ prestamo.cliente.cedula }}</span></div>
+                <div class="kv"><span class="kv-label">Monto prestado</span><span class="kv-val">${{ prestamo.monto_prestado|int }}</span></div>
+                <div class="kv"><span class="kv-label">Total a pagar</span><span class="kv-val">${{ prestamo.monto_total_a_pagar|int }}</span></div>
+                <div class="kv"><span class="kv-label">Cobrador</span><span class="kv-val">{{ prestamo.cobrador.username }}</span></div>
+                <div class="kv"><span class="kv-label">Teléfono</span><span class="kv-val">{{ prestamo.cliente.telefono }}</span></div>
+                <div class="mt-3">
+                    <small class="text-muted">Progreso del pago</small>
+                    <div class="progress mt-1" style="height: 20px;">
+                        <div class="progress-bar
+                            {% if prestamo.estado_visual == 'en_mora' %}bg-danger
+                            {% elif prestamo.estado_visual == 'proximo_vencer' %}bg-warning
+                            {% else %}bg-success{% endif %}"
+                            role="progressbar" style="width: {{ prestamo.progreso }}%;">{{ prestamo.progreso }}%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="{{ url_for('detalle_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-primary">
+                    <i class="bi bi-wallet2 me-1"></i>Ver detalle y registrar pagos
+                </a>
+            </div>
+        </div>
     </div>
 </div>
-
-<footer class="footer bg-dark text-white-50 text-center fixed-bottom">
-    Versión 1.0 - Licencia para COBRANZAS ABC SAS válida hasta 31/12/2026
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+{% endfor %}
+{% endblock %}

@@ -9,7 +9,7 @@
     {% include '_theme.html' %}
 </head>
 <body>
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-dark bg-dark sticky-top">
     <div class="container-fluid">
         <a class="navbar-brand d-flex align-items-center" href="#">
             <i class="bi bi-safe2-fill me-2"></i>PrestApp <span class="fw-normal ms-1 opacity-75">· Cobrador</span>
@@ -31,10 +31,11 @@
     </div>
     <hr class="my-4">
     <h3 class="section-title">Mis Préstamos Asignados</h3>
-        <div class="row mt-3">
+    <div class="row mt-3">
         {% for prestamo in prestamos %}
         <div class="col-md-4 mb-3">
-            <div class="card h-100 hover-lift">
+            <div class="card h-100 hover-lift loan-card" role="button" tabindex="0"
+                 data-bs-toggle="modal" data-bs-target="#loan{{ prestamo.id }}">
                 <div class="card-body">
                     <h5 class="card-title mb-1">{{ prestamo.cliente.nombre_completo }}</h5>
                     <h6 class="card-subtitle mb-3 text-muted"><i class="bi bi-person-vcard me-1"></i>C.C. {{ prestamo.cliente.cedula }}</h6>
@@ -42,22 +43,46 @@
                         <span class="text-muted small">Monto</span>
                         <strong>${{ prestamo.monto_prestado|int }}</strong>
                     </div>
-                    <div class="d-flex justify-content-between mb-3">
+                    <div class="d-flex justify-content-between">
                         <span class="text-muted small">Total a pagar</span>
                         <strong>${{ prestamo.monto_total_a_pagar|int }}</strong>
                     </div>
-                    <a href="{{ url_for('detalle_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-primary w-100">
-                        <i class="bi bi-wallet2 me-1"></i>Ver y registrar pagos
-                    </a>
+                    <div class="text-end mt-2"><small class="text-primary">Toca para ver <i class="bi bi-chevron-right"></i></small></div>
                 </div>
             </div>
         </div>
         {% else %}
-        <div class="col">
-            <div class="alert alert-secondary">No tienes préstamos asignados por ahora.</div>
-        </div>
+        <div class="col"><div class="alert alert-secondary">No tienes préstamos asignados por ahora.</div></div>
         {% endfor %}
     </div>
 </div>
+
+<!-- Modales: vista rápida de cada préstamo -->
+{% for prestamo in prestamos %}
+<div class="modal fade" id="loan{{ prestamo.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ prestamo.cliente.nombre_completo }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="kv"><span class="kv-label">Cédula</span><span class="kv-val">{{ prestamo.cliente.cedula }}</span></div>
+                <div class="kv"><span class="kv-label">Teléfono</span><span class="kv-val">{{ prestamo.cliente.telefono }}</span></div>
+                <div class="kv"><span class="kv-label">Monto prestado</span><span class="kv-val">${{ prestamo.monto_prestado|int }}</span></div>
+                <div class="kv"><span class="kv-label">Total a pagar</span><span class="kv-val">${{ prestamo.monto_total_a_pagar|int }}</span></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <a href="{{ url_for('detalle_prestamo', prestamo_id=prestamo.id) }}" class="btn btn-primary">
+                    <i class="bi bi-wallet2 me-1"></i>Ver y registrar pagos
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

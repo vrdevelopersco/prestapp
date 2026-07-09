@@ -1,0 +1,37 @@
+{# Navegación del sidebar — fuente única, usada por el sidebar de escritorio
+   y por el menú deslizable (offcanvas) en móvil. #}
+<ul class="nav nav-pills flex-column mb-auto">
+    <li class="nav-item mb-1">
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-link text-white {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+        </a>
+    </li>
+    <li class="mb-1">
+        <a href="{{ url_for('gestion_clientes') }}" class="nav-link text-white {% if request.endpoint == 'gestion_clientes' %}active{% endif %}">
+            <i class="bi bi-people-fill me-2"></i>Gestión de Clientes
+        </a>
+    </li>
+    <li class="mb-1">
+        <a href="{{ url_for('gestion_usuarios') }}" class="nav-link text-white {% if request.endpoint == 'gestion_usuarios' %}active{% endif %}">
+            <i class="bi bi-person-gear me-2"></i>Gestión de Usuarios
+        </a>
+    </li>
+    <li class="mb-1">
+        <a href="{{ url_for('simulador') }}" class="nav-link text-white {% if request.endpoint == 'simulador' %}active{% endif %}">
+            <i class="bi bi-calculator me-2"></i>Simulador de Crédito
+        </a>
+    </li>
+    <li class="mb-1">
+        <a href="{{ url_for('configuracion') }}" class="nav-link text-white {% if request.endpoint == 'configuracion' %}active{% endif %}">
+            <i class="bi bi-whatsapp me-2"></i>Configuración
+        </a>
+    </li>
+</ul>
+<hr>
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item">
+        <a href="{{ url_for('logout') }}" class="nav-link text-warning">
+            <i class="bi bi-box-arrow-right me-2"></i>Cerrar Sesión
+        </a>
+    </li>
+</ul>
