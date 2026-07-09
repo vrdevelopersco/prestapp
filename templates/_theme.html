@@ -1,0 +1,241 @@
+{# =========================================================================
+   PrestApp — Design system (capa sobre Bootstrap 5).
+   Se incluye en el <head> DESPUÉS de los CSS de Bootstrap para sobreescribir.
+   Fuente única de estilos: editar aquí y se refleja en toda la app.
+   ========================================================================= #}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand:      #0d9488;   /* teal-600  — marca / acciones */
+    --brand-600:  #0f766e;
+    --brand-700:  #115e59;
+    --brand-tint: #ecfdf9;
+    --gold:       #c08a2d;   /* oro contable — acento de firma */
+    --ink:        #10233a;   /* texto principal */
+    --muted:      #64748b;   /* texto secundario */
+    --bg:         #e9edf1;   /* fondo de la app */
+    --surface:    #ffffff;
+    --line:       rgba(16,35,58,.09);
+    --ok:         #16a34a;   /* al día */
+    --warn:       #e08a1e;   /* próximo a vencer */
+    --bad:        #e23d4d;   /* en mora */
+    --slate:      #5b6b8c;   /* neutro frío para conteos */
+    --shadow-sm:  0 1px 2px rgba(16,35,58,.05);
+    --shadow-md:  0 10px 30px -14px rgba(16,35,58,.28);
+    --radius:     16px;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--ink);
+    background-color: var(--bg) !important;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.006em;
+  }
+  h1,h2,h3,h4,h5,.h1,.h2,.h3,.h4,.h5 {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  a { color: var(--brand-600); }
+  a:hover { color: var(--brand-700); }
+  .text-primary { color: var(--brand-600) !important; }
+  .text-muted { color: var(--muted) !important; }
+
+  /* ---- Layout: sidebar + contenido ---- */
+  .sidebar { width: 258px; min-height: 100vh; }
+  .content { flex-grow: 1; padding: 1.75rem; padding-bottom: 72px; }
+
+  .sidebar.bg-dark {
+    background: linear-gradient(185deg,#0d3b37 0%, #0a2530 58%, #081a24 100%) !important;
+    border-right: 1px solid rgba(255,255,255,.06);
+  }
+  .sidebar .fs-4 {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .sidebar hr { border-color: rgba(255,255,255,.12); opacity: 1; }
+  .sidebar .nav-link {
+    color: rgba(255,255,255,.72) !important;
+    border-radius: 11px;
+    padding: .6rem .85rem;
+    font-weight: 500;
+    font-size: .95rem;
+    transition: background-color .18s ease, color .18s ease;
+  }
+  .sidebar .nav-link i { opacity: .9; }
+  .sidebar .nav-link:not(.active):hover {
+    background-color: rgba(255,255,255,.08) !important;
+    color: #fff !important;
+  }
+  .sidebar .nav-link.active {
+    background: linear-gradient(90deg, var(--brand) 0%, var(--brand-600) 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px -8px rgba(13,148,136,.75);
+  }
+  .sidebar .nav-link.text-warning { color: #ffd27d !important; }
+  .sidebar .nav-link.text-warning:hover { background-color: rgba(255,210,125,.12) !important; }
+
+  /* ---- Top navbar (dashboard cobrador) ---- */
+  .navbar.bg-dark {
+    background: linear-gradient(90deg,#0d3b37 0%, #0a2530 100%) !important;
+    box-shadow: var(--shadow-sm);
+  }
+  .navbar .navbar-brand {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  .card-header {
+    background: transparent;
+    border-bottom: 1px solid var(--line);
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .card-title { font-family: 'Plus Jakarta Sans', sans-serif; }
+  .hover-lift { transition: transform .18s ease, box-shadow .18s ease; }
+  .hover-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+  /* ---- KPI stat cards (elemento de firma) ---- */
+  .stat .card-body { display: flex; align-items: center; gap: .95rem; padding: 1.15rem 1.25rem; }
+  .stat-icon {
+    flex: 0 0 auto; width: 46px; height: 46px; border-radius: 13px;
+    display: grid; place-items: center; font-size: 1.3rem;
+  }
+  .stat-label {
+    text-transform: uppercase; letter-spacing: .07em;
+    font-size: .7rem; font-weight: 600; color: var(--muted); margin-bottom: 2px;
+  }
+  .stat-value {
+    font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;
+    font-size: 1.7rem; line-height: 1.1; color: var(--ink);
+    font-feature-settings: 'tnum' 1; letter-spacing: -0.03em;
+  }
+  .stat--brand .stat-icon { background: var(--brand-tint); color: var(--brand-700); }
+  .stat--ok    .stat-icon { background: #e7f7ee; color: var(--ok); }
+  .stat--warn  .stat-icon { background: #fcf1de; color: var(--warn); }
+  .stat--gold  .stat-icon { background: #f7efdb; color: var(--gold); }
+  .stat--slate .stat-icon { background: #eaeef6; color: var(--slate); }
+  .stat--ok    { border-top: 3px solid var(--ok); }
+  .stat--brand { border-top: 3px solid var(--brand); }
+  .stat--warn  { border-top: 3px solid var(--warn); }
+  .stat--slate { border-top: 3px solid var(--slate); }
+
+  /* ---- Section heading con hilo de oro (firma) ---- */
+  .section-title {
+    display: flex; align-items: center; gap: .6rem;
+    font-size: 1.15rem; margin: 0 0 1rem;
+  }
+  .section-title::before {
+    content: ""; width: 22px; height: 3px; border-radius: 2px;
+    background: var(--gold); display: inline-block;
+  }
+
+  /* ---- Buttons ---- */
+  .btn { border-radius: 11px; font-weight: 600; }
+  .btn-lg { border-radius: 13px; padding: .7rem 1.4rem; }
+  .btn-primary {
+    background: linear-gradient(180deg, var(--brand) 0%, var(--brand-600) 100%);
+    border: none; box-shadow: 0 8px 18px -10px rgba(13,148,136,.9);
+  }
+  .btn-primary:hover, .btn-primary:focus {
+    background: linear-gradient(180deg, var(--brand-600) 0%, var(--brand-700) 100%);
+    transform: translateY(-1px);
+  }
+  .btn-outline-primary { color: var(--brand-600); border-color: var(--brand); }
+  .btn-outline-primary:hover { background: var(--brand); border-color: var(--brand); color:#fff; }
+  .btn-warning { background: #f4b740; border-color: #f4b740; color: #4a3608; }
+  .btn-warning:hover { background: #e6a828; border-color: #e6a828; color:#4a3608; }
+  .btn-danger { background: var(--bad); border-color: var(--bad); }
+  .btn-danger:hover { background: #cd2e3d; border-color: #cd2e3d; }
+  .btn-outline-light:hover { color: var(--brand-700); }
+
+  /* ---- Forms ---- */
+  .form-label { font-weight: 600; color: var(--ink); font-size: .9rem; }
+  .form-control, .form-select {
+    border-radius: 11px; border-color: var(--line); padding: .6rem .8rem;
+  }
+  .form-control:focus, .form-select:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 .22rem rgba(13,148,136,.18);
+  }
+
+  /* ---- Tables ---- */
+  .table { --bs-table-hover-bg: var(--brand-tint); }
+  .table > thead th {
+    text-transform: uppercase; letter-spacing: .04em; font-size: .74rem;
+    color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--line);
+  }
+  .table > tbody td { vertical-align: middle; }
+
+  /* ---- Badges ---- */
+  .badge { font-weight: 600; letter-spacing: .01em; padding: .4em .65em; border-radius: 8px; }
+  .badge.bg-success { background: var(--ok) !important; }
+  .badge.bg-danger  { background: var(--bad) !important; }
+  .badge.bg-warning { background: var(--warn) !important; color:#fff !important; }
+
+  /* ---- Progress ---- */
+  .progress { border-radius: 999px; background: #eef1f5; height: 18px !important; }
+  .progress-bar { font-weight: 600; font-size: .72rem; }
+  .progress-bar.bg-success { background: var(--ok) !important; }
+  .progress-bar.bg-warning { background: var(--warn) !important; }
+  .progress-bar.bg-danger  { background: var(--bad) !important; }
+
+  /* ---- List group ---- */
+  .list-group-item { border-color: var(--line); }
+
+  /* ---- Alerts ---- */
+  .alert { border-radius: 12px; border: 1px solid var(--line); }
+
+  /* ---- Borders de estado en cards ---- */
+  .border-danger  { border-color: var(--bad) !important; }
+  .border-warning { border-color: var(--warn) !important; }
+
+  /* ---- Footer ---- */
+  .footer {
+    height: 40px; line-height: 40px; font-size: .78rem;
+    background: #081a24 !important; color: rgba(255,255,255,.55) !important;
+    letter-spacing: .01em;
+  }
+
+  /* ---- Páginas de autenticación / consulta pública ---- */
+  .auth-wrap {
+    min-height: 100vh; display: grid; place-items: center; padding: 1.5rem;
+    background:
+      radial-gradient(1100px 520px at 15% -10%, rgba(13,148,136,.16), transparent 60%),
+      radial-gradient(900px 500px at 110% 110%, rgba(192,138,45,.12), transparent 55%),
+      linear-gradient(180deg,#0a2530 0%, #0d3b37 100%);
+  }
+  .auth-card {
+    width: 100%; max-width: 410px; border-radius: 20px;
+    box-shadow: 0 30px 70px -30px rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.6);
+  }
+  .auth-brand {
+    width: 62px; height: 62px; border-radius: 18px; margin: 0 auto;
+    display: grid; place-items: center; font-size: 1.8rem; color: #fff;
+    background: linear-gradient(160deg, var(--brand) 0%, var(--brand-700) 100%);
+    box-shadow: 0 12px 26px -10px rgba(13,148,136,.8);
+  }
+
+  @media (max-width: 575.98px) {
+    .stat-value { font-size: 1.45rem; }
+    .content { padding: 1.1rem; padding-bottom: 72px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+  :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+</style>

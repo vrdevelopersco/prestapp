@@ -40,6 +40,14 @@ if not all([DB_USER, DB_PASS, DB_HOST, DB_NAME]):
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}"
 
+# Evita el "MySQL server has gone away" (Internal Server Error que se soluciona al refrescar):
+# pool_pre_ping verifica la conexión antes de usarla y reconecta si el servidor la cerró;
+# pool_recycle la renueva antes de que Hostinger la cierre por inactividad.
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 280,
+}
+
 
 # --- INICIALIZACIÓN DE COMPONENTES ---
 db = SQLAlchemy(app)
